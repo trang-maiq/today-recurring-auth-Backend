@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  ai-template-db:
+    image: postgres:latest
+    container_name: db-postgres-ai-template
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: Secur3Passw0rd
+      POSTGRES_DB: development
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - go-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 3s
+      timeout: 5s
+      retries: 3
+
+  ai-template-backend:
+    build: .
+    container_name: backend-go-postgres-app
+    depends_on:
+      ai-template-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: ai-template-db
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: Secur3Passw0rd
+      DB_NAME: development
+      DB_SSL_MODE: disable
+    networks:
+      - go-network
+    ports:
+      - "4242:4242"
+
+volumes:
+  postgres-data:
+
+networks:
+  go-network:
+    driver: bridge
